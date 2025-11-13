@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SP Tech Vehicle Maintenance</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <meta name="theme-color" content="#202124">
+
+  <style>
+    :root{
+      --accent: #d64545;
+      --accent-dark: #8b2020;
+      --muted: #98a0a6;
+      --card-bg: #fff;
+      --page-bg: #f4f6f8;
+      --success: #2e7d32;
+    }
+
+    html,body{height:100%}
+    body{
+      background: linear-gradient(180deg,#f7f9fb,#eef3f7);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      color: #222;
+      margin:0;
+      padding-bottom: 80px;
+    }
+
+    .app-top{
+      background: linear-gradient(90deg, rgba(20,20,20,0.98), rgba(8,8,8,0.98));
+      color: #fff;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      position: sticky; top:0; z-index:40;
+    }
+    .app-top h1{ font-size:1.15rem; margin:0; font-weight:700; letter-spacing:-0.2px;}
+    .app-top .sub { color: rgba(255,255,255,0.75); font-size:0.82rem; }
+
+    .container-main{ max-width:1150px; margin:18px auto; padding:0 14px; }
+
+    /* Dashboard card */
+    .dashboard-card{ display:flex; flex-direction: column; gap:12px; margin-bottom:14px; align-items:start; }
+    @media (max-width:980px){ .dashboard-card{ flex-direction: row; } }
+
+    .dash-summary{ padding:14px; border-radius:12px; background:var(--card-bg); box-shadow: 0 6px 18px rgba(16,16,16,0.04); border:1px solid rgba(0,0,0,0.04); display:flex; gap:12px; align-items:center; justify-content:space-between; }
+    .dash-items{ display:flex; gap:12px; align-items:center; }
+    .dash-item{ padding:10px 12px; border-radius:10px; background:#fbfbfb; min-width:160px; text-align:left; }
+    .dash-item .num{ font-weight:800; font-size:1.4rem; }
+    .dash-item .label{ color:var(--muted); font-weight:700; font-size:0.86rem; }
+
+    .dash-right{ padding:14px; border-radius:12px; background:var(--card-bg); box-shadow: 0 6px 18px rgba(16,16,16,0.04); border:1px solid rgba(0,0,0,0.04); }
+
+    /* Controls */
+    .top-controls{ display:flex; gap:12px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+    .search-box{ flex:1; min-width:160px; }
+
+    /* Cards grid */
+    .cards-grid{ display:grid; grid-template-columns: repeat(2, minmax(320px, 1fr)); gap:18px; }
+    @media (max-width:900px){ .cards-grid{ grid-template-columns: 1fr; } }
+
+    .card-vehicle{
+      background: var(--card-bg);
+      border-radius:14px;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      border: 1px solid rgba(0,0,0,0.04);
+      transition: transform .14s ease, box-shadow .14s ease, background .14s ease;
+      box-shadow: 0 8px 28px rgba(16,16,16,0.04);
+      padding:12px;
+    }
+    .card-vehicle:hover{ transform: translateY(-6px); box-shadow: 0 20px 48px rgba(16,16,16,0.08); }
+
+    .card-vehicle.due-week{ box-shadow: 0 18px 36px rgba(255,190,90,0.08); border-color: rgba(255,186,0,0.12); background: linear-gradient(180deg, #fff8ef, #fffaf3); }
+    .card-vehicle.overdue{ box-shadow: 0 18px 36px rgba(215,69,69,0.06); border-color: rgba(215,69,69,0.12); background: linear-gradient(180deg, #fff1f1, #fff6f6); }
+
+    .card-body-compact{ display:flex; gap:12px; align-items:flex-start; flex:1 1 auto; }
+    .avatar { width:72px;height:72px;border-radius:12px; display:flex;align-items:center;justify-content:center; font-weight:800; font-size:1.2rem; color: #fff; background: linear-gradient(180deg,#222,#111); flex-shrink:0; overflow:hidden; }
+    .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+    .meta { flex:1; min-width:0; }
+    .card-title{ font-weight:800; font-size:1.05rem; margin:0; color:#111; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .card-sub{ margin:4px 0 8px; color:var(--muted); font-size:0.88rem; }
+
+    .badges-row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+
+    .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; font-weight:700; font-size:0.78rem; }
+    .pill--muted { background:#fafafa; color:#444; border:1px solid rgba(0,0,0,0.03); }
+    .pill--info { background:#e9f7ff; color:#055a8c; border:1px solid rgba(5,90,140,0.07); }
+    .pill--danger { background: linear-gradient(90deg,#ffd6d6,#ffd0d0); color:#7a1818; border:1px solid rgba(139,32,32,0.06); box-shadow: 0 6px 18px rgba(215,69,69,0.06); }
+    .pill--ok { background:#f3fff5; color:var(--success); border:1px solid rgba(46,125,50,0.06); }
+
+    .notes{ color:#666; font-size:0.92rem; margin-top:6px; min-height:38px; overflow:hidden; }
+
+    .card-actions{ padding:10px 6px; display:flex; gap:8px; align-items:center; border-top:1px dashed rgba(0,0,0,0.03); margin-top:8px; }
+
+    .fab-add{ position: fixed; right: 18px; bottom: 24px; z-index: 60; background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border: none; color:#fff; width:64px;height:64px;border-radius:16px; display:flex;align-items:center;justify-content:center; box-shadow: 0 12px 40px rgba(139,32,32,0.18); transition: transform .12s ease, box-shadow .12s ease; }
+
+    .photo-preview { width:72px;height:72px;border-radius:10px;overflow:hidden;border:1px solid rgba(0,0,0,0.06); display:flex;align-items:center;justify-content:center;background:#f7f7f7; }
+    .photo-input{ display:flex; gap:8px; align-items:center; }
+
+    .muted-small{ font-size:0.86rem; color:var(--muted); }
+    .timeline{ margin-top:8px; }
+
+    .collapse-toggle{ cursor:pointer; color:var(--accent-dark); font-weight:700; }
+  </style>
+</head>
+<body>
+  <div class="app-top">
+    <div class="container-main d-flex align-items-center justify-content-between">
+      <div>
+        <h1>S P Vehicle Maintenance</h1>
+        <div class="sub">Drive long — we keep track of oil, air, and KM</div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button id="btnExportTop" class="btn btn-sm" style="background:#111;color:#fff;border-radius:10px;border:1px solid rgba(255,255,255,0.06)"><i class="bi bi-download"></i> Export</button>
+        <button id="btnImportTop" class="btn btn-sm" style="background:transparent;color:#fff;border-radius:10px;border:1px solid rgba(255,255,255,0.08)" data-bs-toggle="modal" data-bs-target="#importModal"><i class="bi bi-upload"></i> Import</button>
+        <button id="btnSyncTop" class="btn btn-sm" style="background:transparent;color:#fff;border-radius:10px;border:1px solid rgba(255,255,255,0.08)"><i class="bi bi-cloud-arrow-down"></i> Sync (download)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-main">
+    <!-- Dashboard card at top -->
+    <div class="dashboard-card">
+      <div class="dash-summary">
+        <div class="dash-items">
+          <div class="dash-item">
+            <div class="label">Vehicles overdue</div>
+            <div class="num" id="statOverdue">0</div>
+            <div class="muted-small">Past due dates</div>
+          </div>
+
+          <div class="dash-item">
+            <div class="label">Oil due soon</div>
+            <div class="num" id="statDueSoon">0</div>
+            <div class="muted-small">Within 7 days</div>
+          </div>
+
+          <div class="dash-item">
+            <div class="label">Total KM logged</div>
+            <div class="num" id="statTotalKM">0</div>
+            <div class="muted-small">Sum of current KM</div>
+          </div>
+        </div>
+
+        <div style="text-align:right; min-width:160px;">
+          <div style="font-weight:800">Vehicles: <span id="statCount">0</span></div>
+          <div class="muted-small">Updated: <span id="dashUpdated">—</span></div>
+        </div>
+      </div>
+
+      <div class="dash-right">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:800">Last Updated Timeline</div>
+          <div class="collapse-toggle" id="toggleTimeline" data-bs-toggle="collapse" data-bs-target="#timelineCollapse" aria-expanded="false">Show ▼</div>
+        </div>
+
+        <div id="timelineCollapse" class="collapse timeline">
+          <div id="timeline" style="max-height:200px; overflow:auto;"></div>
+        </div>
+
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button id="btnNotifyNow" class="btn btn-sm btn-danger small-btn">Notify Now</button>
+          <button id="requestNotif" class="btn btn-sm btn-outline-secondary small-btn">Request Notifications</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="top-controls">
+      <input id="search" class="form-control search-box" placeholder="Search by name or number..." />
+      <div>
+        <button id="btnShowDueOnly" class="btn btn-light small-btn">Show Due Only</button>
+      </div>
+    </div>
+
+    <!-- Vehicles list -->
+    <div id="cardsRow" class="cards-grid"></div>
+
+    <div class="center-note muted-small" style="margin-top:12px">Tip: Use Sync to move data between devices (download then import).</div>
+  </div>
+
+  <!-- Floating Add -->
+  <button class="fab-add" id="fabAdd" data-bs-toggle="modal" data-bs-target="#vehicleModal" title="Add vehicle">
+    <i class="bi bi-plus-lg"></i>
+  </button>
+
+  <!-- Add / Edit Modal -->
+  <div class="modal fade" id="vehicleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form id="vehicleForm" class="needs-validation" novalidate>
+          <div class="modal-header">
+            <h5 class="modal-title">Add Vehicle</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="vehicleId">
+            <div class="row g-3 align-items-center">
+              <div class="col-md-6">
+                <label class="form-label">Vehicle Name</label>
+                <input id="name" class="form-control" required />
+                <div class="invalid-feedback">Vehicle name required.</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Vehicle Number (eg KA-01-XXXX)</label>
+                <input id="number" class="form-control" required />
+                <div class="invalid-feedback">Vehicle number required.</div>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Last Oil Change Date</label>
+                <input id="oilDate" type="date" class="form-control" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Last Oil Change KM</label>
+                <input id="oilKm" type="number" min="0" class="form-control" placeholder="e.g. 12345" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Current KM</label>
+                <input id="currentKm" type="number" min="0" class="form-control" placeholder="e.g. 12500" />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Last Air Check Date</label>
+                <input id="airDate" type="date" class="form-control" />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Photo (optional)</label>
+                <div class="photo-input">
+                  <div class="photo-preview" id="photoPreview"><i class="bi bi-camera"></i></div>
+                  <input id="photoFile" type="file" accept="image/*" class="form-control form-control-sm" />
+                </div>
+                <div class="muted-small mt-1">Photo is stored locally as a data URL.</div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Notes (optional)</label>
+                <textarea id="notes" class="form-control" rows="2"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-danger" style="background:linear-gradient(180deg,var(--accent),var(--accent-dark)); border:none;">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick KM Modal -->
+  <div class="modal fade" id="kmModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <form id="kmForm">
+          <div class="modal-header"><h5 class="modal-title">Update KM</h5></div>
+          <div class="modal-body">
+            <input type="hidden" id="kmVehicleId">
+            <label class="form-label">Current KM</label>
+            <input id="kmValue" class="form-control" type="number" min="0" />
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-light" data-bs-dismiss="modal" type="button">Cancel</button>
+            <button class="btn btn-primary" type="submit">Update</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Modal -->
+  <div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Import Data (JSON)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2 muted-small">Paste JSON exported from this app. This will replace current stored vehicles.</div>
+          <textarea id="importArea" class="form-control" rows="6"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button id="doImport" class="btn btn-danger">Import</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+  (function(){
+    // Config & state
+    const STORAGE_KEY = 'vehicle_store_v2';
+    let vehicles = [];
+    let timeline = []; // {ts: ISO, type, text}
+    const cardsRow = document.getElementById('cardsRow');
+    const form = document.getElementById('vehicleForm');
+    const modalEl = document.getElementById('vehicleModal');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    const kmModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('kmModal'));
+    const importModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('importModal'));
+    const todayISO = () => new Date().toISOString().split('T')[0];
+
+    // Utilities
+    const uid = () => Math.random().toString(36).slice(2,9);
+    function escapeHtml(s){ return String(s || '').replace(/[&"'<>]/g, c => ({'&':'&amp;','"':'&quot;',"'":'&#39;','<':'&lt;','>':'&gt;'})[c] || c); }
+    function toNum(v){ const n = parseInt(v); return isNaN(n)? null : n; }
+    function canUseLocalStorage(){ try{ localStorage.setItem('__test','1'); localStorage.removeItem('__test'); return true; }catch(e){ return false; } }
+    function nowISO(){ return new Date().toISOString(); }
+
+    // Date formatting dd/mm/yyyy
+    function fmt(d){
+      if(!d) return "—";
+      const date = new Date(d);
+      if(!isNaN(date.getTime())){
+        const dd = String(date.getDate()).padStart(2,'0');
+        const mm = String(date.getMonth()+1).padStart(2,'0');
+        const yy = date.getFullYear();
+        return `${dd}/${mm}/${yy}`;
+      }
+      // fallback for yyyy-mm-dd strings
+      const parts = String(d).split('-');
+      if(parts.length>=3) return `${String(parts[2]).padStart(2,'0')}/${String(parts[1]).padStart(2,'0')}/${parts[0]}`;
+      return String(d);
+    }
+    function parseISODate(d){
+      if(!d) return null;
+      const date = new Date(d);
+      if(!isNaN(date.getTime())) return date;
+      const parts = String(d).split('-');
+      if(parts.length>=3) return new Date(parts[0], parts[1]-1, parts[2]);
+      return null;
+    }
+    function daysBetween(dateStr){
+      if(!dateStr) return null;
+      const d = parseISODate(dateStr);
+      if(!d) return null;
+      const ms = Date.now() - d.getTime();
+      return Math.floor(ms / (1000*60*60*24));
+    }
+
+    // Load & Save
+    function load(){
+      try{ vehicles = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){ vehicles = []; }
+      try{ timeline = JSON.parse(localStorage.getItem(STORAGE_KEY + '_timeline') || '[]'); }catch(e){ timeline = []; }
+      render();
+    }
+    function save(addTimeline){
+      if(!canUseLocalStorage()){
+        const data = JSON.stringify(vehicles, null, 2);
+        const blob = new Blob([data], {type:'application/json'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'vehicles-backup.json'; a.click();
+        URL.revokeObjectURL(a.href);
+        alert('LocalStorage blocked — data downloaded as vehicles-backup.json. Import on another device to restore.');
+        return;
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(vehicles));
+      if(addTimeline){
+        timeline.unshift(addTimeline);
+        timeline = timeline.slice(0,200);
+        localStorage.setItem(STORAGE_KEY + '_timeline', JSON.stringify(timeline));
+      }
+      render();
+    }
+
+    function downloadJSON(filename='vehicles.json'){
+      const data = JSON.stringify(vehicles, null, 2);
+      const blob = new Blob([data], {type:'application/json'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    // Rendering
+    function render(filter=''){
+      cardsRow.innerHTML = '';
+      const lower = String(filter || '').toLowerCase();
+      const list = vehicles
+        .filter(v => !lower || (v.name||'').toLowerCase().includes(lower) || (v.number||'').toLowerCase().includes(lower))
+        .sort((a,b)=> (a.name||'').localeCompare(b.name||''));
+
+      if(list.length===0){
+        cardsRow.innerHTML = '<div style="grid-column:1/-1"><div class="p-4 text-center muted-small">No vehicles yet — click + to add one.</div></div>';
+        updateDashboard();
+        return;
+      }
+
+      for(const v of list){
+        const oilDays = daysBetween(v.oilDate);
+        const airDays = daysBetween(v.airDate);
+        const oilLeft = v.oilDate ? (90 - oilDays) : null;
+        const airLeft = v.airDate ? (60 - airDays) : null;
+        const oilKmDue = (v.currentKm && v.oilKm && (v.currentKm - v.oilKm) > 3000);
+        const oilDue = (oilLeft !== null && oilLeft <= 0) || oilKmDue;
+        const airDue = (airLeft !== null && airLeft <= 0);
+        const dueSoon = (oilLeft !== null && oilLeft <= 7 && oilLeft > 0) || (airLeft !== null && airLeft <= 7 && airLeft > 0);
+
+        const div = document.createElement('div');
+        div.className = 'card-vehicle ' + (oilDue || airDue ? ( (oilDue && oilLeft <=0) || (airDue && airLeft <=0) ? 'overdue' : '' ) : '') + (dueSoon? ' due-week':'');
+        div.innerHTML = `
+          <div style="display:flex; gap:12px;">
+            <div class="avatar" id="av-${v.id}">${v.photo ? `<img src="${v.photo}" alt="photo">` : escapeHtml((v.name||'V').charAt(0).toUpperCase())}</div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                <div>
+                  <div class="card-title">${escapeHtml(v.name || '—')}</div>
+                  <div class="card-sub">${escapeHtml(v.number || '—')}</div>
+                </div>
+                <div class="muted-small">Updated: ${fmt(v.updatedAt||v._updatedAt||v._createdAt||'')}</div>
+              </div>
+
+              <div class="badges-row mt-2">
+                <span class="pill pill--muted">Oil Changed KM: ${v.oilKm? escapeHtml(v.oilKm) : '—'}</span>
+                <span class="pill pill--muted">Current KM: ${v.currentKm? escapeHtml(v.currentKm) : '—'}</span>
+                <span class="pill ${oilDue? 'pill--danger' : (dueSoon? 'pill--muted' : 'pill--info')}">
+                  Oil Changed Date: ${v.oilDate? fmt(v.oilDate) : '—'}
+                  ${oilLeft !== null ? (oilLeft > 0 ? ` (${oilLeft}d left)` : ' — OVERDUE') : ''}
+                  ${oilKmDue ? ' • KM due' : ''} 
+                  <small style="color:red">Change Every 3 Months</small>
+                </span>
+
+                <span class="pill ${airDue? 'pill--danger' : 'pill--info'}">
+                  Air Checked Date: ${v.airDate? fmt(v.airDate) : '—'}
+                  ${airLeft !== null ? (airLeft > 0 ? ` (${airLeft}d left)` : ' — OVERDUE') : ''} <small style="color:red"> Check Every 2 Months</small>
+                </span>
+              </div>
+
+              <div class="notes">${v.notes? escapeHtml(v.notes) : ''}</div>
+
+              <div class="card-actions">
+                <button class="btn btn-sm btn-edit btn-sm-custom" data-action="edit" data-id="${v.id}"><i class="bi bi-pencil"></i> Edit</button>
+                <button class="btn btn-sm btn-del btn-sm-custom" data-action="delete" data-id="${v.id}"><i class="bi bi-trash"></i> Delete</button>
+                <button class="btn btn-sm btn-km ms-auto btn-sm-custom" data-action="logkm" data-id="${v.id}"><i class="bi bi-speedometer2"></i> Update KM</button>
+              </div>
+            </div>
+          </div>
+        `;
+        cardsRow.appendChild(div);
+      }
+
+      updateDashboard();
+    }
+
+    // Form handling and photo
+    const photoFile = document.getElementById('photoFile');
+    const photoPreview = document.getElementById('photoPreview');
+
+    photoFile.addEventListener('change', ()=> {
+      const f = photoFile.files && photoFile.files[0];
+      if(!f) { photoPreview.innerHTML = '<i class="bi bi-camera"></i>'; photoPreview.dataset.src=''; return; }
+      const reader = new FileReader();
+      reader.onload = e => {
+        photoPreview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+        photoPreview.dataset.src = e.target.result;
+      };
+      reader.readAsDataURL(f);
+    });
+
+    form.addEventListener('submit', e=>{
+      e.preventDefault();
+      if(!form.checkValidity()){ form.classList.add('was-validated'); return; }
+      const id = document.getElementById('vehicleId').value || uid();
+      const payload = {
+        id,
+        name: document.getElementById('name').value.trim(),
+        number: document.getElementById('number').value.trim(),
+        oilDate: document.getElementById('oilDate').value || null,
+        oilKm: toNum(document.getElementById('oilKm').value),
+        currentKm: toNum(document.getElementById('currentKm').value),
+        airDate: document.getElementById('airDate').value || null,
+        notes: document.getElementById('notes').value.trim() || null,
+        photo: photoPreview.dataset.src || null,
+        updatedAt: fmt(nowISO())
+      };
+      const idx = vehicles.findIndex(x=>x.id===id);
+      if(idx>=0){
+        payload._createdAt = vehicles[idx]._createdAt || vehicles[idx].createdAt || nowISO();
+        vehicles[idx] = Object.assign({}, vehicles[idx], payload);
+        save({ts: nowISO(), type:'edit', text:`Edited ${payload.name || payload.number}`});
+      } else {
+        payload._createdAt = nowISO();
+        vehicles.push(payload);
+        save({ts: nowISO(), type:'add', text:`Added ${payload.name || payload.number}`});
+      }
+      form.reset(); form.classList.remove('was-validated');
+      photoPreview.dataset.src = '';
+      photoPreview.innerHTML = '<i class="bi bi-camera"></i>';
+      modal.hide();
+    });
+
+    // Card action delegation
+    cardsRow.addEventListener('click', e=>{
+      const btn = e.target.closest('button');
+      if(!btn) return;
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+      if(action === 'edit') openEdit(id);
+      if(action === 'delete') doDelete(id);
+      if(action === 'logkm') quickKm(id);
+    });
+
+    function openEdit(id){
+      const v = vehicles.find(x=>x.id===id);
+      if(!v) return;
+      document.getElementById('vehicleId').value = v.id;
+      document.getElementById('name').value = v.name || '';
+      document.getElementById('number').value = v.number || '';
+      document.getElementById('oilDate').value = v.oilDate || '';
+      document.getElementById('oilKm').value = v.oilKm || '';
+      document.getElementById('currentKm').value = v.currentKm || '';
+      document.getElementById('airDate').value = v.airDate || '';
+      document.getElementById('notes').value = v.notes || '';
+      if(v.photo){ photoPreview.dataset.src = v.photo; photoPreview.innerHTML = `<img src="${v.photo}" style="width:100%;height:100%;object-fit:cover">`; } else { photoPreview.dataset.src=''; photoPreview.innerHTML = '<i class="bi bi-camera"></i>'; }
+      modalEl.querySelector('.modal-title').textContent = 'Edit Vehicle';
+      modal.show();
+    }
+
+    function doDelete(id){
+      if(!confirm('Delete this vehicle? This cannot be undone.')) return;
+      const v = vehicles.find(x=>x.id===id);
+      vehicles = vehicles.filter(x=>x.id!==id);
+      save({ts: nowISO(), type:'delete', text:`Deleted ${v.name||v.number}`});
+    }
+
+    function quickKm(id){
+      const v = vehicles.find(x=>x.id===id); if(!v) return;
+      document.getElementById('kmVehicleId').value = id;
+      document.getElementById('kmValue').value = v.currentKm || '';
+      kmModal.show();
+    }
+
+    document.getElementById('kmForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const id = document.getElementById('kmVehicleId').value;
+      const n = parseInt(document.getElementById('kmValue').value);
+      if(isNaN(n)){ alert('Invalid number'); return; }
+      const v = vehicles.find(x=>x.id===id); if(!v) return;
+      v.currentKm = n;
+      v.updatedAt = fmt(nowISO());
+      save({ts: nowISO(), type:'km', text:`Updated KM ${v.name||v.number} to ${n}`});
+      kmModal.hide();
+    });
+
+    // Search
+    document.getElementById('search').addEventListener('input', e => {
+      render(e.target.value.trim().toLowerCase());
+    });
+
+    // Export/Sync/Import
+    document.getElementById('btnExportTop').addEventListener('click', ()=> downloadJSON());
+    document.getElementById('btnSyncTop').addEventListener('click', ()=> { downloadJSON('vehicles_sync.json'); alert('Downloaded vehicles_sync.json — import this file on another device to sync.'); });
+    document.getElementById('doImport').addEventListener('click', ()=> {
+      const raw = document.getElementById('importArea').value.trim();
+      if(!raw){ alert('Nothing to import'); return; }
+      try{
+        const arr = JSON.parse(raw);
+        if(!Array.isArray(arr)) throw new Error('Invalid format');
+        for(const it of arr) if(!it.id || !it.name) throw new Error('Each item must have id and name');
+        vehicles = arr.map(x => (x.updatedAt = x.updatedAt || x._updatedAt || fmt(x._createdAt||nowISO()), x));
+        save({ts: nowISO(), type:'import', text:`Imported ${arr.length} vehicles`});
+        importModal.hide(); document.getElementById('importArea').value='';
+      }catch(err){ alert('Import failed: '+err.message); }
+    });
+
+    // Seed
+    function maybeSeed(){
+      if(vehicles.length === 0 && !localStorage.getItem(STORAGE_KEY + '_seeded')){
+        vehicles.push({id:uid(), name:'My Bike', number:'TN-XX-1234', oilDate:todayISO(), oilKm:12000, currentKm:12150, airDate:todayISO(), notes:'Primary bike', photo:null, _createdAt: todayISO(), updatedAt: fmt(todayISO())});
+        localStorage.setItem(STORAGE_KEY + '_seeded','1');
+        save({ts: nowISO(), type:'seed', text:'Initial seed vehicle'});
+      }
+    }
+
+    // Dashboard update
+    function updateDashboard(){
+      // counts & totals
+      let dueSoon = 0, overdue = 0, totalKM = 0;
+      for(const v of vehicles){
+        const oilDays = daysBetween(v.oilDate);
+        const oilLeft = v.oilDate ? (90 - oilDays) : null;
+        const airDays = daysBetween(v.airDate);
+        const airLeft = v.airDate ? (60 - airDays) : null;
+        const oilKmDue = (v.currentKm && v.oilKm && (v.currentKm - v.oilKm) > 3000);
+        const oilDue = (oilLeft !== null && oilLeft <= 0) || oilKmDue;
+        const airDue = (airLeft !== null && airLeft <= 0);
+        const soon = (oilLeft !== null && oilLeft <= 7 && oilLeft > 0) || (airLeft !== null && airLeft <= 7 && airLeft > 0);
+        if(oilDue || airDue) overdue++;
+        if(soon) dueSoon++;
+        totalKM += Number(v.currentKm) || 0;
+      }
+      document.getElementById('statCount').textContent = vehicles.length;
+      document.getElementById('statOverdue').textContent = overdue;
+      document.getElementById('statDueSoon').textContent = dueSoon;
+      document.getElementById('statTotalKM').textContent = totalKM;
+
+      // dashUpdated: pick latest updated or created safely
+      let latest = null;
+      if(vehicles.length){
+        latest = vehicles.reduce((a,b) => {
+          const da = parseISODate(a.updatedAt || a._updatedAt || a._createdAt || 0) || new Date(0);
+          const db = parseISODate(b.updatedAt || b._updatedAt || b._createdAt || 0) || new Date(0);
+          return db > da ? b : a;
+        });
+      }
+      document.getElementById('dashUpdated').textContent = latest ? fmt(latest.updatedAt || latest._createdAt || '') : '—';
+
+      // timeline render
+      const timelineEl = document.getElementById('timeline');
+      timelineEl.innerHTML = '';
+      for(const t of (timeline||[])){
+        const d = new Date(t.ts);
+        const di = isNaN(d.getTime()) ? t.ts : `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        const el = document.createElement('div');
+        el.className = 'timeline-item';
+        el.style.padding = '8px 0';
+        el.innerHTML = `<div style="font-weight:700">${escapeHtml(t.text)}</div><div class="muted-small">${di} • ${escapeHtml(t.type)}</div>`;
+        timelineEl.appendChild(el);
+      }
+    }
+
+    // Notifications
+    function rhC9tALXUhHxqXvDGi1whgsTt7yXAGGiwb(){
+      if(!('Notification' in window)) { alert('Browser does not support notifications'); return; }
+      Notification.requestPermission().then(p => { alert('Notification permission: ' + p); });
+    }
+    document.getElementById('requestNotif').addEventListener('click', rhC9tALXUhHxqXvDGi1whgsTt7yXAGGiwb);
+
+    function sendAppNotification(title, body){
+      if(!('Notification' in window)) return;
+      if(Notification.permission === 'granted'){
+        new Notification(title, { body, icon: iconDataUrl() });
+      } else {
+        Notification.requestPermission().then(p => { if(p === 'granted') new Notification(title, { body, icon: iconDataUrl() }); });
+      }
+    }
+    document.getElementById('btnNotifyNow').addEventListener('click', ()=> {
+      const dueArr = vehicles.filter(v => {
+        const oilLeft = v.oilDate ? (90 - daysBetween(v.oilDate)) : null;
+        const airLeft = v.airDate ? (60 - daysBetween(v.airDate)) : null;
+        return (oilLeft !== null && oilLeft <= 7) || (airLeft !== null && airLeft <= 7);
+      });
+      if(dueArr.length === 0){ alert('No vehicles due soon'); return; }
+      const title = `Vehicles due: ${dueArr.length}`;
+      const body = dueArr.map(v=> `${v.name||v.number} - Oil:${v.oilDate?fmt(v.oilDate):'—'}`).join('\n');
+      sendAppNotification(title, body);
+      alert('Notification sent (if permission granted).');
+    });
+
+    // Helpers
+    function iconDataUrl(){
+      const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><rect width='100%' height='100%' fill='#d64545'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='64' fill='white'>S</text></svg>`;
+      return 'data:image/svg+xml;base64,' + btoa(svg);
+    }
+
+    function appIconObject(){
+      const data = iconDataUrl();
+      return [{src: data, sizes: "128x128", type: "image/svg+xml"}];
+    }
+
+    // Simple PWA manifest + SW (safe)
+    (function setupPWA(){
+      try{
+        const manifest = { name: "SP Vehicle Maintenance", short_name: "SP Vehicles", start_url: ".", display: "standalone", background_color: "#ffffff", description: "Manage vehicle oil, air checks, and KM", icons: appIconObject() };
+        const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        let link = document.querySelector('link[rel="manifest"]');
+        if(!link){ link = document.createElement('link'); link.rel='manifest'; document.head.appendChild(link); }
+        link.href = url;
+        if('serviceWorker' in navigator){
+          const sw = `self.addEventListener('install',e=>self.skipWaiting()); self.addEventListener('activate',e=>clients.claim()); self.addEventListener('fetch',e=>{ e.respondWith(fetch(e.request).catch(()=>caches.match(e.request))); });`;
+          const swBlob = new Blob([sw], {type:'application/javascript'});
+          const swUrl = URL.createObjectURL(swBlob);
+          navigator.serviceWorker.register(swUrl).catch(()=>{/* ignore */});
+        }
+      }catch(err){ /* do not break app */ }
+    })();
+
+    // UI helpers
+    document.getElementById('btnShowDueOnly').addEventListener('click', ()=>{
+      render(''); // ensure up-to-date
+      document.querySelectorAll('#cardsRow .card-vehicle').forEach(el=>{
+        if(el.classList.contains('due-week') || el.classList.contains('overdue')) el.style.display = '';
+        else el.style.display = 'none';
+      });
+    });
+
+    // Quick add
+    document.getElementById('fabAdd').addEventListener('click', ()=> {
+      document.getElementById('vehicleId').value = '';
+      form.reset(); form.classList.remove('was-validated');
+      photoPreview.dataset.src=''; photoPreview.innerHTML = '<i class="bi bi-camera"></i>';
+      modalEl.querySelector('.modal-title').textContent = 'Add Vehicle';
+    });
+
+    // Seed and init
+    window.addEventListener('load', ()=>{
+      if(!canUseLocalStorage()){
+        alert('LocalStorage is blocked in this environment. The app will attempt a download fallback on save.');
+      }
+      load(); maybeSeed();
+      // notify if required after small delay
+      setTimeout(() => {
+        const dueArr = vehicles.filter(v => {
+          const oilLeft = v.oilDate ? (90 - daysBetween(v.oilDate)) : null;
+          const airLeft = v.airDate ? (60 - daysBetween(v.airDate)) : null;
+          return (oilLeft !== null && oilLeft <= 7) || (airLeft !== null && airLeft <= 7) || (oilLeft !== null && oilLeft <= 0) || (airLeft !== null && airLeft <= 0);
+        });
+        if(dueArr.length) sendAppNotification('Maintenance reminder', `${dueArr.length} vehicles need attention`);
+      }, 900);
+
+    });
+
+    // update storage info periodically
+    setInterval(()=> { /* placeholder if later needed */ }, 60_000);
+
+    // beforeunload quick save
+    window.addEventListener('beforeunload', ()=> {
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(vehicles)); }catch(e){}
+    });
+
+    // expose for debugging
+    window._spSave = save;
+
+  })();
+  </script>
+</body>
+</html>
