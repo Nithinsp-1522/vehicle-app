@@ -1,0 +1,18 @@
+{
+  "name": "S P Vahan",
+  "short_name": "SP Vahan",
+  "start_url": "/vehicle-app/",
+  "scope": "/vehicle-app/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0a2137",
+  "description": "Vehicle maintenance tracking for oil, air, KM, reminders.",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
